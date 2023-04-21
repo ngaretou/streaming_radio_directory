@@ -1,0 +1,169 @@
+[
+  {
+    "id": "1",
+    "name": "Galcom Canada",
+    "country": "Canada",
+    "language": "en",
+    "actions": [{ "address": "https://galcom.org", "icon": "public" }],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/GalcomCanada/GalcomCanada.png",
+    "streams": ["https://galcom.org/GalcomCanada"]
+  },
+  {
+    "id": "2",
+    "name": "Habari Maalum",
+    "country": "Tanzania",
+    "language": "sw",
+    "actions": [
+      { "address": "https://habarimaalummedia.or.tz/", "icon": "public" }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/HabariMaalum/HabariMaalum.png",
+    "streams": [
+      "https://xstreamer.galcom.org/HabariMaalum",
+      "https://xstreamer.galcom.org/HabariMaalumOgg"
+    ]
+  },
+  {
+    "id": "3",
+    "name": "KJJJ",
+    "country": "",
+    "language": "en",
+    "actions": [
+      {
+        "address": "https://radio.galcom.org/?station=KJJJFM",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/KJJJFM/Galcon-KJJJ-v16a-Final.jpg",
+    "streams": [
+      "https://xstreamer.galcom.org/KJJJFM",
+      "https://xstreamer.galcom.org/KJJJFMOgg"
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Lighthouse Radio",
+    "country": "Belize",
+    "language": "en",
+    "actions": [
+      {
+        "address": "https://www.lighthouseradio.org/",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/LighthouseRadio/LighthouseRadio.png",
+    "streams": ["https://xstreamer.galcom.org/LighthouseRadio"]
+  },
+  {
+    "id": "5",
+    "name": "Mercy FM",
+    "country": "Tanzania",
+    "language": "en",
+    "actions": [
+      {
+        "address": "https://radio.galcom.org/?station=Mercy",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/Mercy/Mercy.png",
+    "streams": [
+      "https://xstreamer.galcom.org/Mercy",
+      "https://xstreamer.galcom.org/MercyOgg"
+    ]
+  },
+  {
+    "id": "6",
+    "name": "Mix Cris Radio",
+    "country": "",
+    "language": "es",
+    "actions": [
+      {
+        "address": "https://galcomstorage.blob.core.windows.net/app-data/stations/MixCrisRadio/MixCrisRadio.png",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/MixCrisRadio/MixCrisRadio.png",
+    "streams": ["https://xstreamer.galcom.org/MixCrisRadio"]
+  },
+  {
+    "id": "7",
+    "name": "Mosoj Chaski",
+    "country": "",
+    "language": "es",
+    "actions": [
+      {
+        "address": "http://mosojchaski.org/",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/Mosoj-Chaski-Radio/Mosoj-Chaski-Radio.png",
+    "streams": [
+      "https://xstreamer.galcom.org/Mosoj-Chaski-Radio",
+      "https://xstreamer.galcom.org/Mosoj-Chaski-RadioOgg"
+    ]
+  },
+  {
+    "id": "8",
+    "name": "My Refuge",
+    "country": "",
+    "language": "en",
+    "actions": [
+      {
+        "address": "https://radio.galcom.org/?station=MyRefugeChristianRadio",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/MyRefugeChristianRadio/MyRefugeChristianRadio.jpg",
+    "streams": [
+      "https://xstreamer.galcom.org/MyRefugeChristianRadio",
+      "https://xstreamer.galcom.org/MyRefugeChristianRadioOgg"
+    ]
+  },
+  {
+    "id": "9",
+    "name": "New Life Africa",
+    "country": "Tanzania",
+    "language": "en",
+    "actions": [
+      {
+        "address": "https://www.newlifeafrica.org/",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/New%20Life%20Africa/New%20Life%20Africa.png",
+    "streams": [
+      "https://xstreamer.galcom.org/NewLifeAfrica",
+      "https://xstreamer.galcom.org/NewLifeAfricaOgg"
+    ]
+  },
+  {
+    "id": "10",
+    "name": "Radio 4VEH",
+    "country": "Haïti",
+    "language": "fr",
+    "actions": [
+      {
+        "address": "https://4veh.org/",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/Radio_4VEH/Radio_4VEH.png",
+    "streams": ["https://xstreamer.galcom.org/Radio_4VEH"]
+  },
+  {
+    "id": "11",
+    "name": "Vie Nouvelle Afrique",
+    "country": "",
+    "language": "fr",
+    "actions": [
+      {
+        "address": "https://www.newlifeafrica.org/",
+        "icon": "public"
+      }
+    ],
+    "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/VieNouvelleAfrique/LOGO%20VIE%20NOUVELLE%20AFRIQUE%20taille%20mini.png",
+    "streams": [
+      "https://xstreamer.galcom.org/VieNouvelleAfrique",
+      "https://xstreamer.galcom.org/VieNouvelleAfriqueOgg"
+    ]
+  }
+]
