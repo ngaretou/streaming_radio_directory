@@ -12,10 +12,10 @@ class CircleButton extends StatelessWidget {
     return ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          shape: const CircleBorder(),
-          padding: const EdgeInsets.all(8),
-          backgroundColor: const Color.fromARGB(255, 74, 74, 74),
-        ),
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(8),
+            
+            ),
         child: icon);
   }
 }

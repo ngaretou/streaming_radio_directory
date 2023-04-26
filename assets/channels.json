@@ -4,9 +4,13 @@
     "name": "Galcom Canada",
     "country": "Canada",
     "language": "en",
-    "actions": [{ "address": "https://galcom.org", "icon": "public" }],
+    "actions": [
+      { "address": "https://galcom.org", "icon": "web" },
+      { "address": "https://galcom.org/contact/info/", "icon": "email" },
+      { "address": "https://facebook.com", "icon": "facebook" }
+    ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/GalcomCanada/GalcomCanada.png",
-    "streams": ["https://galcom.org/GalcomCanada"]
+    "streams": ["https://xstreamer.galcom.org/GalcomCanada"]
   },
   {
     "id": "2",
@@ -14,7 +18,7 @@
     "country": "Tanzania",
     "language": "sw",
     "actions": [
-      { "address": "https://habarimaalummedia.or.tz/", "icon": "public" }
+      { "address": "https://habarimaalummedia.or.tz/", "icon": "web" }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/HabariMaalum/HabariMaalum.png",
     "streams": [
@@ -30,7 +34,7 @@
     "actions": [
       {
         "address": "https://radio.galcom.org/?station=KJJJFM",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/KJJJFM/Galcon-KJJJ-v16a-Final.jpg",
@@ -47,7 +51,7 @@
     "actions": [
       {
         "address": "https://www.lighthouseradio.org/",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/LighthouseRadio/LighthouseRadio.png",
@@ -61,7 +65,7 @@
     "actions": [
       {
         "address": "https://radio.galcom.org/?station=Mercy",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/Mercy/Mercy.png",
@@ -78,7 +82,7 @@
     "actions": [
       {
         "address": "https://galcomstorage.blob.core.windows.net/app-data/stations/MixCrisRadio/MixCrisRadio.png",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/MixCrisRadio/MixCrisRadio.png",
@@ -92,7 +96,7 @@
     "actions": [
       {
         "address": "http://mosojchaski.org/",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/Mosoj-Chaski-Radio/Mosoj-Chaski-Radio.png",
@@ -109,7 +113,7 @@
     "actions": [
       {
         "address": "https://radio.galcom.org/?station=MyRefugeChristianRadio",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/MyRefugeChristianRadio/MyRefugeChristianRadio.jpg",
@@ -126,7 +130,7 @@
     "actions": [
       {
         "address": "https://www.newlifeafrica.org/",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/New%20Life%20Africa/New%20Life%20Africa.png",
@@ -143,7 +147,7 @@
     "actions": [
       {
         "address": "https://4veh.org/",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/Radio_4VEH/Radio_4VEH.png",
@@ -157,7 +161,7 @@
     "actions": [
       {
         "address": "https://www.newlifeafrica.org/",
-        "icon": "public"
+        "icon": "web"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/VieNouvelleAfrique/LOGO%20VIE%20NOUVELLE%20AFRIQUE%20taille%20mini.png",

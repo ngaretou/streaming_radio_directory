@@ -6,14 +6,14 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'dart:async';
 import 'dart:convert';
 
-class Action {
+class ChannelAction {
   final String address;
   final String icon;
 
-  Action({required this.address, required this.icon});
+  ChannelAction({required this.address, required this.icon});
 
-  factory Action.fromJson(Map<String, dynamic> json) {
-    return Action(
+  factory ChannelAction.fromJson(Map<String, dynamic> json) {
+    return ChannelAction(
       address: json['address'],
       icon: json['icon'],
     );
@@ -25,7 +25,7 @@ class Channel {
   final String name;
   final String country;
   final String language;
-  final List<Action> actions;
+  final List<ChannelAction> actions;
   final String image;
   final List<String> streams;
 
@@ -46,7 +46,7 @@ class Channel {
       country: json['country'],
       language: json['language'],
       actions: json['actions']
-          .map<Action>((action) => Action.fromJson(action))
+          .map<ChannelAction>((action) => ChannelAction.fromJson(action))
           .toList(),
       image: json['image'],
       streams:
@@ -62,18 +62,22 @@ class Channels with ChangeNotifier {
   //   return [..._channels];
   // }
 
-  Channel? _currentChannel;
+  // Channel? _currentChannel;
 
-  Channel get currentChannel {
-    if (_currentChannel != null) {
-      _currentChannel = channels[0];
-    }
-    return _currentChannel!;
-  }
+  // Channel get currentChannel {
+  //   late Channel returnme;
+  //   if (_currentChannel == null) {
+  //     returnme = channels[0];
+  //   } else {
+  //     returnme = _currentChannel!;
+  //   }
+  //   return returnme;
+  // }
 
-  set currentChannel(Channel incomingChannel) {
-    _currentChannel = incomingChannel;
-  }
+  // set currentChannel(Channel incomingChannel) {
+  //   _currentChannel = incomingChannel;
+  //   notifyListeners();
+  // }
 
   Future<List<Channel>> getData() async {
     //TODO get data from web
@@ -86,8 +90,6 @@ class Channels with ChangeNotifier {
     channels = channelsData
         .map((jsonchannel) => Channel.fromJson(jsonchannel))
         .toList();
-
-    // notifyListeners();
     return channels;
   }
 }

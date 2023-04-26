@@ -15,7 +15,6 @@ class FilterButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
-          backgroundColor: const Color.fromARGB(255, 74, 74, 74),
           padding: const EdgeInsets.all(8),
         ),
         child: icon);
