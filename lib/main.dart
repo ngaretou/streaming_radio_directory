@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import '/screens/player_screen.dart';
@@ -61,7 +62,7 @@ class _MyAppState extends State<MyApp> {
                       ThemeData(
                           brightness: Brightness.light,
                           colorSchemeSeed: Colors.teal,
-                          fontFamily: 'Andika'),
+                          fontFamily: 'Lato'),
                   home: const MyHomePage(title: 'Streaming Radio'),
                 ),
     );
@@ -88,6 +89,29 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    //Smallest iPhone is UIKit 320 x 480 = 800.
+    //Biggest (12 pro max) is 428 x 926 = 1354.
+    //Android biggest phone I can find is is 480 x 853 = 1333
+    //For tablets the smallest I can find is 768 x 1024
+    final mediaQuery = MediaQuery.of(context).size;
+    final bool isPhone = (mediaQuery.width + mediaQuery.height) <= 1400;
+    if (isPhone) {
+      //only allow portrait mode, not landscape on phones
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight
+      ]);
+    }
+    //The top of the app is mostly dark so make the status bar icon color always white
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarIconBrightness: Brightness.light, //Android
+        statusBarBrightness: Brightness.dark //iOS
+        ));
     return Scaffold(
         // floatingActionButton: Builder(
         //   builder: (context) {

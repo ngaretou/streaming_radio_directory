@@ -162,6 +162,10 @@
       {
         "address": "https://www.newlifeafrica.org/",
         "icon": "web"
+      },
+      {
+        "address": "corey.garrett@sim.org",
+        "icon": "email"
       }
     ],
     "image": "https://galcomstorage.blob.core.windows.net/app-data/stations/VieNouvelleAfrique/LOGO%20VIE%20NOUVELLE%20AFRIQUE%20taille%20mini.png",

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../providers/channels.dart';
 import '../providers/theme.dart';
 import '../providers/info.dart';
@@ -37,6 +38,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
 
   @override
   Widget build(BuildContext context) {
+    ThemeModel themeModel = Provider.of<ThemeModel>(context, listen: false);
     final formKey = GlobalKey<FormState>();
 
     final mediaQuery = MediaQuery.of(context).size;
@@ -187,10 +189,11 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                                   });
                                   setDialogState(() {});
                                 },
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   filled: false,
-                                  border: OutlineInputBorder(),
-                                  labelText: 'Country',
+                                  border: const OutlineInputBorder(),
+                                  labelText:
+                                      themeModel.currentTranslation.country,
                                 ),
                               ),
                               DropdownButtonFormField(
@@ -202,10 +205,11 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                                   });
                                   setDialogState(() {});
                                 },
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   filled: false,
-                                  border: OutlineInputBorder(),
-                                  labelText: 'Language',
+                                  border: const OutlineInputBorder(),
+                                  labelText:
+                                      themeModel.currentTranslation.language,
                                 ),
                               ),
                               Row(
@@ -243,11 +247,13 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                                           setState(() {});
                                         });
                                       },
-                                      child: const Text('OK')),
+                                      child: Text(
+                                          themeModel.currentTranslation.oK)),
                                   OutlinedButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(),
-                                      child: const Text('Cancel'))
+                                      child: Text(
+                                          themeModel.currentTranslation.cancel))
                                 ],
                               )
                             ])),
@@ -256,6 +262,89 @@ class _ChannelsGridState extends State<ChannelsGrid> {
               ),
             );
           });
+    }
+
+    showAbout(BuildContext context) async {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              // title: Text(packageInfo.appName),
+              content: SingleChildScrollView(
+                  child: ListBody(children: [
+                Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/icon.png',
+                      fit: BoxFit.cover,
+                      width: 52,
+                      // filterQuality: FilterQuality.high,
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 200),
+                          child: Text(
+                            packageInfo.appName,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ),
+                        Text(
+                            'Version ${packageInfo.version} (${packageInfo.buildNumber})'),
+                        const Text('© 2023 SIM'),
+                      ],
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                const Text(
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed pellentesque lectus. Nulla vehicula facilisis nibh, sed ultrices est ullamcorper sed. Cras at nunc erat. Integer eget rutrum est. Fusce mollis, dolor nec sagittis euismod, justo sem consequat massa, id porttitor neque justo nec sapien. Aliquam et tincidunt neque, nec commodo nisi. Ut vehicula luctus mauris, ac suscipit nunc accumsan id.')
+              ])),
+              actions: <Widget>[
+                OutlinedButton(
+                  child: const Text('Licenses'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    showLicenses(context,
+                        appName: packageInfo.appName,
+                        appVersion:
+                            '${packageInfo.version} (${packageInfo.buildNumber})');
+                  },
+                ),
+                OutlinedButton(
+                  child: Text(themeModel.currentTranslation.oK),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          });
+
+      // showAboutDialog(
+      //   context: context,
+      //   applicationName: 'Radio',
+      //   applicationVersion: packageInfo.version,
+      //   applicationLegalese: '© 2023 SIM',
+      //   children: [
+      //     // Text('Individual radio stations retain ')
+      //   ],
+      //   applicationIcon: Image.asset(
+      //     'assets/images/icon.png',
+      //     fit: BoxFit.cover,
+      //     width: 52,
+      //     // filterQuality: FilterQuality.high,
+      //   ),
+      // );
     }
 
     Widget radioBadge(String path) {
@@ -281,7 +370,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
               padding: const EdgeInsets.all(8.0),
               child: Container(
                 decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(8.0),
                     shape: BoxShape.rectangle),
                 height: 75,
@@ -349,11 +438,15 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                     Expanded(
                       child: Center(
                         child: Text(data[index].name,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              overflow: TextOverflow.fade,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium!
+                                .copyWith(
+                                  // fontSize: 20,
+                                  color: Colors.white,
+                                  overflow: TextOverflow.fade,
+                                ),
+                            maxLines: 2,
                             textAlign: TextAlign.center),
                       ),
                     ),
@@ -430,7 +523,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: const Color.fromARGB(255, 74, 74, 74),
-                              hintText: 'Enter part of name',
+                              hintText: themeModel.currentTranslation.enterName,
                               hintStyle: Theme.of(context)
                                   .textTheme
                                   .labelLarge!
@@ -596,14 +689,20 @@ class _ChannelsGridState extends State<ChannelsGrid> {
         SliverList(
           delegate: SliverChildListDelegate(
             [
-              const SizedBox(
-                height: 40,
-              ),
+              // const SizedBox(
+              //   height: 40,
+              // ),
               // lowerOptions(
               //     context, Icons.info, 'Licenses', () => showLicenses(context)),
-              // lowerDivider(),
-              lowerOptions(context, Icons.access_time, 'About',
+              lowerDivider(),
+              lowerOptions(
+                  context,
+                  Icons.info,
+                  themeModel.currentTranslation.about,
                   () => showAbout(context)),
+              const SizedBox(
+                height: 20,
+              )
             ],
           ),
         ),
@@ -612,7 +711,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
   }
 }
 
-void showLicenses(BuildContext context) {
+void showLicenses(BuildContext context, {String? appName, String? appVersion}) {
   void showLicensePage({
     required BuildContext context,
     String? applicationName,
@@ -636,7 +735,8 @@ void showLicenses(BuildContext context) {
 
   showLicensePage(
       context: context,
-      applicationName: 'Streaming Radio',
+      applicationVersion: appVersion,
+      applicationName: appName,
       useRootNavigator: true);
 }
 
@@ -658,7 +758,7 @@ Widget lowerOptions(
           label,
           style: Theme.of(context)
               .textTheme
-              .headlineSmall!
+              .titleLarge!
               .copyWith(color: Colors.white),
         ),
       ],
@@ -673,33 +773,5 @@ Widget lowerDivider() {
     endIndent: 50,
     thickness: 2,
     color: Colors.white,
-  );
-}
-
-showAbout(BuildContext context) {
-  // PackageInfo packageInfo = await PackageInfo.fromPlatform();
-  // if (!mounted) return;
-  showAboutDialog(
-    context: context,
-    applicationName: 'Radio',
-    // applicationVersion: packageInfo.version,
-    applicationLegalese: '© 2023 SIM',
-    // children: [],
-    applicationIcon: Image.asset(
-      'assets/images/icon.png',
-      fit: BoxFit.cover,
-      width: 52,
-      // filterQuality: FilterQuality.high,
-    ),
-    // Container(
-    //   // color: $styles.colors.black,
-    //   // padding: EdgeInsets.all($styles.insets.xs),
-    //   child: Image.asset(
-    //     'assets/images/icon.png',
-    //     fit: BoxFit.cover,
-    //     width: 52,
-    //     // filterQuality: FilterQuality.high,
-    //   ),
-    // ),
   );
 }

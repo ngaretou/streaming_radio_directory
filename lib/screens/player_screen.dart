@@ -14,7 +14,6 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
 
 import '../providers/info.dart';
 import '../providers/channels.dart';
@@ -89,7 +88,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         if (siri9style) {
           waveController.setAmplitude(1);
         } else {
-          waveController.setAmplitude(.5);
+          waveController.setAmplitude(.4);
         }
       } else {
         waveController.setAmplitude(0);
@@ -142,7 +141,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var themeProvider = Provider.of<ThemeModel>(context, listen: false);
+    ThemeModel themeModel = Provider.of<ThemeModel>(context, listen: false);
+    themeModel.setUserLang = currentChannel.language;
     Color smallIconColor = Theme.of(context).colorScheme.primary;
     waveController.color = smallIconColor;
 
@@ -150,10 +150,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
       Image img = Image.network(currentChannel.image);
       PaletteGenerator paletteGenerator =
           await PaletteGenerator.fromImageProvider(img.image);
-      accentColor = paletteGenerator.dominantColor!.color;
+      //get same color no matter what brightness or...
+      // accentColor = paletteGenerator.dominantColor!.color;
+
+      //get different seed color depending on brightness
+      if (themeModel.currentTheme!.brightness == Brightness.light) {
+        accentColor = paletteGenerator.lightVibrantColor!.color;
+      } else {
+        accentColor = paletteGenerator.darkVibrantColor!.color;
+      }
+
       await Future.delayed(const Duration(milliseconds: 50));
 
-      themeProvider.setTheme(color: accentColor, refresh: true);
+      themeModel.setTheme(color: accentColor, refresh: true);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -232,7 +241,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
               const SizedBox(
                 width: 10,
               ),
-              const Text('Radio station is offline temporarily.')
+              Text(themeModel.currentTranslation.stationOffline)
             ],
           ),
         ));
@@ -242,6 +251,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     List<Widget> actions = List.generate(currentChannel.actions.length,
         (index) => action(currentChannel.actions[index]));
 
+    //The button that opens gridview
     Widget menubutton = IconButton(
       icon: Icon(
         Icons.menu,
@@ -265,7 +275,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           middleIndex,
           //The actions Widgets are 48 wide
           const SizedBox(
-            width: 1,
+            width: 48,
           ));
     }
     //https://dart.dev/tools/diagnostic-messages?utm_source=dartdev&utm_medium=redir&utm_id=diagcode&utm_content=division_optimization#division_optimization:~:text=/%20y).-,toInt,-()%3B
@@ -309,12 +319,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
           end: Alignment.bottomCenter,
           colors: <Color>[
             accentColor,
+
             // accentColor,
 
-            // Theme.of(context).scaffoldBackgroundColor,
+            // Theme.of(context).colorScheme.,
             // Theme.of(context).colorScheme.primaryContainer,
             Theme.of(context).scaffoldBackgroundColor,
             // Theme.of(context).colorScheme.primary,
+            // accentColor
           ],
         )),
         child: SafeArea(
@@ -323,28 +335,35 @@ class _PlayerScreenState extends State<PlayerScreen> {
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(
-                    height: 20,
-                  ),
+                  // const SizedBox(
+                  //   height: 20,
+                  // ),
 
-                  Container(
-                      clipBehavior: Clip.hardEdge,
-                      decoration: const BoxDecoration(
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: Colors.black,
-                              offset: Offset(1.0, 6.0),
-                              blurRadius: 20.0,
-                            ),
-                          ],
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(Radius.circular(20))),
-                      width: 300,
-                      height: 300,
-                      child: cachedStationArt),
-                  const SizedBox(
-                    height: 20,
+                  Padding(
+                    padding: const EdgeInsets.all(48.0),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Container(
+                          clipBehavior: Clip.hardEdge,
+                          decoration: const BoxDecoration(
+                              boxShadow: <BoxShadow>[
+                                BoxShadow(
+                                  color: Colors.black,
+                                  offset: Offset(1.0, 6.0),
+                                  blurRadius: 20.0,
+                                ),
+                              ],
+                              color: Colors.white,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(20))),
+                          // width: 300,
+                          // height: 300,
+                          child: cachedStationArt),
+                    ),
                   ),
+                  // const SizedBox(
+                  //   height: 20,
+                  // ),
                   //Wrap to make the station and dexcriptoin stick together despite the Column's spacebetween
                   Wrap(
                       direction: Axis.vertical,
@@ -356,7 +375,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               .textTheme
                               .headlineSmall!
                               .copyWith(
-                                  color: Theme.of(context).colorScheme.primary),
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold),
                         ),
                         Text(
                           subTitle,
@@ -368,29 +388,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               ),
                         ),
                       ]),
-                  const SizedBox(height: 1),
+                  // const SizedBox(height: 1),
 
                   GestureDetector(
                       onTap: () {
-                        setState(() {
-                          if (siri9style) {
-                            siri9style = false;
-                            if (waveActive) {
-                              waveController.setAmplitude(.2);
-                              waveController.setFrequency(6);
-                            } else {
-                              waveController.setAmplitude(0);
-                            }
-                          } else {
-                            siri9style = true;
-                            if (waveActive) {
-                              waveController.setAmplitude(1);
-                              waveController.setFrequency(6);
-                            } else {
-                              waveController.setAmplitude(0);
-                            }
-                          }
-                        });
+                        //change the style
+                        // siri9style = !siri9style;
+                        // setState(() {});
+                        // //then set amplitude VIA the function
+                        // if (waveActive) {
+                        //   setWaveAnimation(true, force: true);
+                        // } else {
+                        //   setWaveAnimation(false, force: true);
+                        // }
                       },
                       child: SiriWave(
                         controller: waveController,
@@ -402,7 +412,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: actions)
+                      children: actions),
+                  const SizedBox(
+                    height: 10,
+                  )
                 ]),
           ),
         ),

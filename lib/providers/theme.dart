@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../data/translations.dart';
 
 //New Material 3 version
 
@@ -13,10 +14,50 @@ class ThemeComponents {
   });
 }
 
+class Translation {
+  String langCode;
+  String langName;
+  String country;
+  String language;
+  String enterName;
+  String about;
+  String stationOffline;
+  String oK;
+  String cancel;
+
+  Translation({
+    required this.langCode,
+    required this.langName,
+    required this.country,
+    required this.language,
+    required this.enterName,
+    required this.about,
+    required this.stationOffline,
+    required this.oK,
+    required this.cancel,
+  });
+}
+
 class ThemeModel extends ChangeNotifier {
+  List<Translation> translations = appTranslations;
   ThemeComponents? userTheme;
   ThemeData? currentTheme;
   Locale? userLocale;
+
+  String? _currentTranslation;
+
+  Translation get currentTranslation {
+    return translations
+        .where((element) => element.langCode == _currentTranslation)
+        .first;
+  }
+
+  String? get currentLang => _currentTranslation;
+
+  set setUserLang(String lang) {
+    _currentTranslation = lang;
+    notifyListeners();
+  }
 
   Future<void> setupTheme() async {
     //TODO if theme exists load it
@@ -80,13 +121,15 @@ class ThemeModel extends ChangeNotifier {
     currentTheme = ThemeData(
         brightness: brightness ?? userTheme!.brightness,
         colorSchemeSeed: color ?? userTheme!.color,
-        fontFamily: 'Andika');
+        fontFamily: 'Lato');
     //send it for storage
     // saveThemeToDisk(theme);
     if (refresh == true || refresh == null) {
       notifyListeners();
     }
   }
+
+  Future<void> setTranslation(String lang) async {}
 
   Future<void> saveThemeToDisk(ThemeComponents theme) async {
     //TODO save theme to disk
