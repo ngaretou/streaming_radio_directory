@@ -2,17 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '/screens/player_screen.dart';
 import 'providers/channels.dart';
 import 'providers/theme.dart';
 
+late Box userPrefsBox;
+
 void main() async {
   //https://pub.dev/packages/just_audio_background
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
-    androidNotificationChannelName: 'Audio playback',
-    androidNotificationOngoing: true,
-  );
+      androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+      androidNotificationChannelName: 'Audio playback',
+      androidNotificationOngoing: true,
+      //https://github.com/ryanheise/just_audio/issues/619
+      //name of icon WITHOUT extension...
+      androidNotificationIcon: 'drawable/ic_stat_icon');
+
+  await Hive.initFlutter();
+
+  userPrefsBox = await Hive.openBox('userPrefs');
 
   runApp(
     MultiProvider(
@@ -113,21 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
         statusBarBrightness: Brightness.dark //iOS
         ));
     return Scaffold(
-        // floatingActionButton: Builder(
-        //   builder: (context) {
-        //     return FloatingActionButton(
-        //       onPressed: () => showMenu(context),
-        //       mini: true,
-        //       shape: const RoundedRectangleBorder(
-        //         borderRadius: BorderRadius.all(
-        //           Radius.circular(10),
-        //         ),
-        //       ),
-        //       child: const Icon(Icons.menu),
-        //     );
-        //   },
-        // ),
-        // floatingActionButtonLocation: FloatingActionButtonLocation.miniEndTop,
+        resizeToAvoidBottomInset: false,
         body: FutureBuilder(
             future: init,
             builder: (ctx, snapshot) =>

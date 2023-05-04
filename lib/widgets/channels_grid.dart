@@ -1,10 +1,15 @@
 // import 'dart:html';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../providers/channels.dart';
 import '../providers/theme.dart';
 import '../providers/info.dart';
@@ -20,46 +25,68 @@ class ChannelsGrid extends StatefulWidget {
 }
 
 class _ChannelsGridState extends State<ChannelsGrid> {
-  ValueNotifier<String> searchTerm = ValueNotifier("");
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final stationSearchController = TextEditingController();
+  ValueNotifier<String> searchTerm = ValueNotifier("");
+
   List<Channel> allChannels = [];
   List<Channel> channelsToDisplay = [];
+  String? currentChannelID;
+  late Channels channelsProvider;
   late bool grid;
-  String? selectedCountry;
-  String? selectedLanguage;
+
+  //for channel filtering
+  String? filterCountry;
+  String? filterLanguage;
+
+  //for interface display
+  String? selectedInterfaceLang;
+  // channelGridDisplayTranslation as opposed to the dialog display translation below
+  late Translation channelGridDisplayTranslation;
+  late ThemeModel themeModel;
+
+  late Future<void> init;
+  late Box userPrefsBox;
 
   @override
   void initState() {
     grid = true;
-    allChannels = Provider.of<Channels>(context, listen: false).channels;
-    // channelsToDisplay.addAll(allChannels);
+    themeModel = Provider.of<ThemeModel>(context, listen: false);
+
+    init = setTranslation();
+
     super.initState();
+  }
+
+  Future<void> setTranslation() async {
+    channelGridDisplayTranslation = await getTranslation(context);
+    userPrefsBox = await Hive.openBox('userPrefs');
+    currentChannelID = userPrefsBox.get('currentChannel');
   }
 
   @override
   Widget build(BuildContext context) {
-    ThemeModel themeModel = Provider.of<ThemeModel>(context, listen: false);
-    final formKey = GlobalKey<FormState>();
-
-    final mediaQuery = MediaQuery.of(context).size;
-    final bool isPhone = (mediaQuery.width + mediaQuery.height) <= 1400;
+    channelsProvider = Provider.of<Channels>(context, listen: true);
+    allChannels = channelsProvider.channels;
+    // final mediaQuery = MediaQuery.of(context).size;
+    // final bool isPhone = (mediaQuery.width + mediaQuery.height) <= 1400;
 
     //handle filters
-    if (selectedCountry != null && selectedLanguage == null) {
+    if (filterCountry != null && filterLanguage == null) {
       channelsToDisplay = [];
       channelsToDisplay.addAll(allChannels);
       channelsToDisplay
-          .removeWhere((element) => element.country != selectedCountry);
-    } else if (selectedCountry == null && selectedLanguage != null) {
+          .removeWhere((element) => element.country != filterCountry);
+    } else if (filterCountry == null && filterLanguage != null) {
       channelsToDisplay = [];
       channelsToDisplay.addAll(allChannels);
       channelsToDisplay
-          .removeWhere((element) => element.language != selectedLanguage);
-    } else if (selectedCountry != null && selectedLanguage != null) {
+          .removeWhere((element) => element.language != filterLanguage);
+    } else if (filterCountry != null && filterLanguage != null) {
       channelsToDisplay = [];
       for (var channel in allChannels) {
-        if (channel.language == selectedLanguage &&
-            channel.country == selectedCountry) {
+        if (channel.language == filterLanguage &&
+            channel.country == filterCountry) {
           channelsToDisplay.add(channel);
         }
       }
@@ -70,6 +97,8 @@ class _ChannelsGridState extends State<ChannelsGrid> {
     }
 
     void sendNewStationToPlayer(Channel newChannel) {
+      HapticFeedback.mediumImpact();
+      channelsProvider.setCurrentChannel = newChannel;
       Navigator.of(context).pop(newChannel);
     }
 
@@ -181,11 +210,11 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               DropdownButtonFormField(
-                                value: selectedCountry,
+                                value: filterCountry,
                                 items: countryDropDowns,
                                 onChanged: (i) {
                                   setState(() {
-                                    selectedCountry = i;
+                                    filterCountry = i;
                                   });
                                   setDialogState(() {});
                                 },
@@ -193,15 +222,15 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                                   filled: false,
                                   border: const OutlineInputBorder(),
                                   labelText:
-                                      themeModel.currentTranslation.country,
+                                      channelGridDisplayTranslation.country,
                                 ),
                               ),
                               DropdownButtonFormField(
-                                value: selectedLanguage,
+                                value: filterLanguage,
                                 items: languageDropDowns,
                                 onChanged: (i) {
                                   setState(() {
-                                    selectedLanguage = i;
+                                    filterLanguage = i;
                                   });
                                   setDialogState(() {});
                                 },
@@ -209,26 +238,26 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                                   filled: false,
                                   border: const OutlineInputBorder(),
                                   labelText:
-                                      themeModel.currentTranslation.language,
+                                      channelGridDisplayTranslation.language,
                                 ),
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   OutlinedButton(
-                                      onPressed: selectedCountry != null ||
-                                              selectedLanguage != null
+                                      onPressed: filterCountry != null ||
+                                              filterLanguage != null
                                           ? () {
-                                              selectedCountry = null;
-                                              selectedLanguage = null;
+                                              filterCountry = null;
+                                              filterLanguage = null;
                                               setState(() {});
                                               setDialogState(() {});
                                             }
                                           : null,
                                       child: Icon(
                                         Icons.filter_alt_off,
-                                        color: selectedCountry == null &&
-                                                selectedLanguage == null
+                                        color: filterCountry == null &&
+                                                filterLanguage == null
                                             ? Colors.grey
                                             : Colors.red,
                                       )),
@@ -240,20 +269,18 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                                   ),
                                   OutlinedButton(
                                       onPressed: () {
-                                        print(selectedCountry);
-                                        print(selectedLanguage);
                                         setState(() {
                                           Navigator.of(context).pop();
                                           setState(() {});
                                         });
                                       },
                                       child: Text(
-                                          themeModel.currentTranslation.oK)),
+                                          channelGridDisplayTranslation.oK)),
                                   OutlinedButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(),
                                       child: Text(
-                                          themeModel.currentTranslation.cancel))
+                                          channelGridDisplayTranslation.cancel))
                                 ],
                               )
                             ])),
@@ -264,7 +291,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
           });
     }
 
-    showAbout(BuildContext context) async {
+    void showAbout(BuildContext context) async {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       if (!mounted) return;
       showDialog(
@@ -277,7 +304,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                 Row(
                   children: [
                     Image.asset(
-                      'assets/images/icon.png',
+                      'assets/icons/icon.png',
                       fit: BoxFit.cover,
                       width: 52,
                       // filterQuality: FilterQuality.high,
@@ -306,8 +333,32 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                 const SizedBox(
                   height: 10,
                 ),
-                const Text(
-                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed pellentesque lectus. Nulla vehicula facilisis nibh, sed ultrices est ullamcorper sed. Cras at nunc erat. Integer eget rutrum est. Fusce mollis, dolor nec sagittis euismod, justo sem consequat massa, id porttitor neque justo nec sapien. Aliquam et tincidunt neque, nec commodo nisi. Ut vehicula luctus mauris, ac suscipit nunc accumsan id.')
+                RichText(
+                    text: TextSpan(
+                  children: [
+                    TextSpan(
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      text:
+                          "All channel streams are the copyright of their respective owners. Responsibility for streamed content including managing the copyrights of the content remains that of the respective owners. \n\nTo add a new radio station to the app, ",
+                    ),
+                    TextSpan(
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                        text: "click here.",
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            String url = 'https://forms.gle/s7YLtsAXUeJb2SmSA';
+                            if (await canLaunchUrl(Uri.parse(url))) {
+                              await launchUrl(Uri.parse(url),
+                                  mode: LaunchMode.externalApplication);
+                            } else {
+                              throw 'Could not launch $url';
+                            }
+                          }),
+                  ],
+                )),
               ])),
               actions: <Widget>[
                 OutlinedButton(
@@ -321,7 +372,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                   },
                 ),
                 OutlinedButton(
-                  child: Text(themeModel.currentTranslation.oK),
+                  child: Text(channelGridDisplayTranslation.oK),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -329,28 +380,10 @@ class _ChannelsGridState extends State<ChannelsGrid> {
               ],
             );
           });
-
-      // showAboutDialog(
-      //   context: context,
-      //   applicationName: 'Radio',
-      //   applicationVersion: packageInfo.version,
-      //   applicationLegalese: '© 2023 SIM',
-      //   children: [
-      //     // Text('Individual radio stations retain ')
-      //   ],
-      //   applicationIcon: Image.asset(
-      //     'assets/images/icon.png',
-      //     fit: BoxFit.cover,
-      //     width: 52,
-      //     // filterQuality: FilterQuality.high,
-      //   ),
-      // );
     }
 
     Widget radioBadge(String path) {
       return CachedNetworkImage(
-        //TODO clear cache when new json data is detected
-
         // cacheManager: ,
         imageUrl: path,
         placeholder: (context, url) => Image.memory(kTransparentImage),
@@ -368,42 +401,31 @@ class _ChannelsGridState extends State<ChannelsGrid> {
           (context, index) {
             return Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8.0),
-                    shape: BoxShape.rectangle),
-                height: 75,
-                child: Row(
-                  children: [
-                    Card(
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        child: radioBadge(data[index].image)),
-                    const SizedBox(width: 30),
-                    Text(data[index].name,
-                        style: Theme.of(context).textTheme.titleMedium)
-                  ],
+              child: GestureDetector(
+                onTap: () => sendNewStationToPlayer(data[index]),
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8.0),
+                      shape: BoxShape.rectangle),
+                  height: 75,
+                  child: Row(
+                    children: [
+                      Card(
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          child: radioBadge(data[index].image)),
+                      const SizedBox(width: 30),
+                      Text(data[index].name,
+                          style: Theme.of(context).textTheme.titleMedium)
+                    ],
+                  ),
                 ),
               ),
             );
-            // return Padding(
-            //   padding: const EdgeInsets.all(8.0),
-            //   child: ListTile(
-
-            //     visualDensity: VisualDensity.standard,
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8.0),
-            //     ),
-            //     leading: radioBadge(data[index].image),
-            //     title: Text(data[index].name),
-            //     contentPadding: const EdgeInsets.all(8),
-            //     tileColor: Colors.amber,
-            //   ),
-            // );
           },
           childCount: data.length,
         ),
@@ -417,10 +439,7 @@ class _ChannelsGridState extends State<ChannelsGrid> {
         maxCrossAxisExtent: 150,
         children: List.generate(data.length, (index) {
           return GestureDetector(
-            onTap: () {
-              print(data[index].name);
-              sendNewStationToPlayer(data[index]);
-            },
+            onTap: () => sendNewStationToPlayer(data[index]),
             child: Column(
               children: [
                 AspectRatio(
@@ -460,253 +479,258 @@ class _ChannelsGridState extends State<ChannelsGrid> {
     }
 
     //
+    print('channels grid build');
+    return FutureBuilder(
+      future: init,
+      builder: (context, snapshot) => snapshot.connectionState ==
+              ConnectionState.waiting
+          ? const Center(child: CircularProgressIndicator())
+          //this is actually where the business happens; HTML just takes the data and renders it
+          //SelectableHtml makes it selectable but you lose some formatting
+          : RefreshIndicator(
+              onRefresh: () async {
+                await channelsProvider.getData(force: true);
+                // Future.delayed(const Duration(seconds: 2));
+                print('updated');
+                setState(() {});
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverList(
+                      delegate: SliverChildListDelegate([
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        children: [
+                          // top row of control buttons
+                          CircleButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Icon(Icons.close)),
+                          const Expanded(
+                              flex: 1,
+                              child: SizedBox(
+                                width: 10,
+                              )),
 
-    return CustomScrollView(
-      slivers: [
-        SliverList(
-            delegate: SliverChildListDelegate([
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Row(
-              children: [
-                //header spacer so the close/theme button row shows
-                CircleButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close)),
-                const Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      width: 10,
-                    )),
-                CircleButton(
-                    onPressed: () {
-                      ThemeModel themeProvider =
-                          Provider.of<ThemeModel>(context, listen: false);
-                      //       ThemeComponents _themeToSet = ThemeComponents(
-                      // brightness: Brightness.light, color: _userTheme.color);
-                      var brightnessToSet =
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Brightness.light
-                              : Brightness.dark;
-                      themeProvider.setTheme(
-                          brightness: brightnessToSet, refresh: true);
-                    },
-                    icon: Theme.of(context).brightness == Brightness.dark
-                        ? const Icon(Icons.light_mode)
-                        : const Icon(Icons.dark_mode)),
-              ],
-            ),
-          ),
-        ])),
-        SliverPersistentHeader(
-            pinned: true,
-            delegate: MySliverPersistentHeaderDelegate(
-              Column(
-                children: [
-                  Form(
-                    key: formKey,
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: TextFormField(
-                            controller: stationSearchController,
-                            onChanged: (value) {
-                              if (value.length > 2 || value.isEmpty) {
-                                filterStationsByName(
-                                    stationSearchController.text);
-                                searchTerm.value = value;
-                                // setState(() {});
+                          //This is the context menu for language
+                          PopupMenuButton(
+                            itemBuilder: (context) {
+                              //This is the user selected value
+                              String? selectedLanguage =
+                                  userPrefsBox.get('selectedLanguage');
+
+                              // ignore: prefer_conditional_assignment
+                              if (selectedLanguage == null) {
+                                selectedLanguage = 'auto';
                               }
+
+                              List<CheckedPopupMenuItem> allLanguageEntries =
+                                  [];
+
+                              var currentChannelLanguageCode = allChannels
+                                  .where((element) =>
+                                      element.id == currentChannelID)
+                                  .first
+                                  .language;
+                              var currentChannelLanguageName =
+                                  languageAbbreviations[
+                                      currentChannelLanguageCode];
+
+                              languageAbbreviations.forEach((key, value) {
+                                late String label;
+                                if (key == 'auto') {
+                                  label =
+                                      '$value ($currentChannelLanguageName)';
+                                } else {
+                                  label = value;
+                                }
+
+                                allLanguageEntries.add(CheckedPopupMenuItem(
+                                    value: key,
+                                    checked: selectedLanguage == key,
+                                    child: Text(label)));
+                              });
+
+                              return allLanguageEntries;
                             },
-                            // onFieldSubmitted: (value) => fetchingListOfUsers =
-                            //     getNamesList(userSearchController.text),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: const Color.fromARGB(255, 74, 74, 74),
-                              hintText: themeModel.currentTranslation.enterName,
-                              hintStyle: Theme.of(context)
-                                  .textTheme
-                                  .labelLarge!
-                                  .copyWith(color: Colors.white70),
-                              border: const UnderlineInputBorder(
-                                borderSide:
-                                    BorderSide(width: 3, color: Colors.red),
+                            onSelected: (value) async {
+                              setUsersChosenInterfaceLanguage(value);
+                              channelGridDisplayTranslation =
+                                  await getTranslation(context);
+                              setState(() {});
+                            },
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
-
-                              suffixIcon: ValueListenableBuilder(
-                                  valueListenable: searchTerm,
-                                  builder: (context, val, child) {
-                                    if (val.isNotEmpty) {
-                                      return IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            stationSearchController.clear();
-                                            channelsToDisplay = [];
-                                            searchTerm.value = '';
-                                          });
-                                        },
-                                        icon: const Icon(Icons.clear),
-                                      );
-                                    } else {
-                                      return const SizedBox(width: 20);
-                                    }
-                                  }),
-
-                              // The validator receives the text that the user has entered.
+                              child: Icon(
+                                Icons.translate,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 10),
+                          CircleButton(
+                              onPressed: () {
+                                ThemeModel themeProvider =
+                                    Provider.of<ThemeModel>(context,
+                                        listen: false);
+
+                                var brightnessToSet =
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Brightness.light
+                                        : Brightness.dark;
+                                themeProvider.setTheme(
+                                    brightness: brightnessToSet, refresh: true);
+                              },
+                              child: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const Icon(Icons.light_mode)
+                                  : const Icon(Icons.dark_mode)),
+                        ],
+                      ),
+                    ),
+                  ])),
+                  SliverPersistentHeader(
+                      pinned: true,
+                      delegate: MySliverPersistentHeaderDelegate(
+                        Column(
+                          children: [
+                            Form(
+                              key: formKey,
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: TextFormField(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium!
+                                          .copyWith(color: Colors.white70),
+                                      controller: stationSearchController,
+                                      onChanged: (value) {
+                                        if (value.length > 2 || value.isEmpty) {
+                                          filterStationsByName(
+                                              stationSearchController.text);
+                                          searchTerm.value = value;
+                                          // setState(() {});
+                                        }
+                                      },
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: const Color.fromARGB(
+                                            255, 74, 74, 74),
+                                        hintText: channelGridDisplayTranslation
+                                            .enterName,
+                                        hintStyle: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium!
+                                            .copyWith(color: Colors.white70),
+                                        border: const UnderlineInputBorder(
+                                          borderSide: BorderSide(
+                                              width: 3, color: Colors.red),
+                                        ),
+
+                                        suffixIcon: ValueListenableBuilder(
+                                            valueListenable: searchTerm,
+                                            builder: (context, val, child) {
+                                              if (val.isNotEmpty) {
+                                                return IconButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      stationSearchController
+                                                          .clear();
+                                                      channelsToDisplay = [];
+                                                      searchTerm.value = '';
+                                                    });
+                                                  },
+                                                  icon: const Icon(Icons.clear),
+                                                );
+                                              } else {
+                                                return const SizedBox(
+                                                    width: 20);
+                                              }
+                                            }),
+
+                                        // The validator receives the text that the user has entered.
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  FilterButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          grid = !grid;
+                                        });
+                                      },
+                                      icon: grid
+                                          ? const Icon(Icons.view_list)
+                                          : const Icon(Icons.grid_view)),
+                                  const SizedBox(width: 10),
+                                  FilterButton(
+                                      onPressed: showFilterOptions,
+                                      // if no filters are selected make the icon filter off
+                                      icon: filterCountry == null &&
+                                              filterLanguage == null
+                                          ? const Icon(Icons.filter_alt_off)
+                                          : const Icon(Icons.filter_alt)),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        FilterButton(
-                            onPressed: () {
-                              setState(() {
-                                grid = !grid;
-                              });
-                            },
-                            icon: grid
-                                ? const Icon(Icons.view_list)
-                                : const Icon(Icons.grid_view)),
-                        const SizedBox(width: 10),
-                        FilterButton(
-                            onPressed: () => showFilterOptions(),
-                            // if no filters are selected make the icon filter off
-                            icon: selectedCountry == null &&
-                                    selectedLanguage == null
-                                ? const Icon(Icons.filter_alt_off)
-                                : const Icon(Icons.filter_alt)),
+                      )),
+
+                  //This rebuilds every time the searchTerm value changes
+                  ValueListenableBuilder(
+                      valueListenable: searchTerm,
+                      builder: (context, val, child) {
+                        //this is in the case some combination of filters results in no stations displayed
+                        if (channelsToDisplay.isEmpty) {
+                          return SliverList(
+                              delegate: SliverChildListDelegate([
+                            const Center(
+                                child: Icon(Icons.sentiment_dissatisfied,
+                                    size: 150, color: Colors.white))
+                          ]));
+                        } else {
+                          //choose here between grid and list view
+                          return grid
+                              ? gridView(channelsToDisplay)
+                              : listView(channelsToDisplay);
+                        }
+                      }),
+
+                  //bottom buttons
+                  SliverList(
+                    delegate: SliverChildListDelegate(
+                      [
+                        // const SizedBox(
+                        //   height: 40,
+                        // ),
+                        // lowerOptions(
+                        //     context, Icons.info, 'Licenses', () => showLicenses(context)),
+                        lowerDivider(),
+                        lowerOptions(
+                            context,
+                            Icons.info,
+                            channelGridDisplayTranslation.about,
+                            () => showAbout(context)),
+                        const SizedBox(
+                          height: 20,
+                        )
                       ],
                     ),
                   ),
                 ],
               ),
-            )),
-        // SliverList(
-        //   delegate: SliverChildListDelegate(
-        //     [
-        //       //header spacer so the close/theme button row shows
-        //       const SizedBox(
-        //         height: 62,
-        //       ),
-        //       //search bar, grid/list button, filter button
-        //       Form(
-        //         key: formKey,
-        //         child: Row(
-        //           children: <Widget>[
-        //             Expanded(
-        //               child: TextFormField(
-        //                 controller: stationSearchController,
-        //                 onChanged: (value) {
-        //                   if (value.length > 2 || value.isEmpty) {
-        //                     filterStationsByName(stationSearchController.text);
-        //                     searchTerm.value = value;
-        //                     // setState(() {});
-        //                   }
-        //                 },
-        //                 // onFieldSubmitted: (value) => fetchingListOfUsers =
-        //                 //     getNamesList(userSearchController.text),
-        //                 decoration: InputDecoration(
-        //                   filled: true,
-        //                   fillColor: const Color.fromARGB(255, 74, 74, 74),
-        //                   hintText: 'Enter part of name',
-        //                   hintStyle: Theme.of(context)
-        //                       .textTheme
-        //                       .labelLarge!
-        //                       .copyWith(color: Colors.white70),
-        //                   border: const UnderlineInputBorder(
-        //                     borderSide: BorderSide(width: 3, color: Colors.red),
-        //                   ),
-
-        //                   suffixIcon: ValueListenableBuilder(
-        //                       valueListenable: searchTerm,
-        //                       builder: (context, val, child) {
-        //                         if (val.isNotEmpty) {
-        //                           return IconButton(
-        //                             onPressed: () {
-        //                               setState(() {
-        //                                 stationSearchController.clear();
-        //                                 channelsToDisplay = [];
-        //                                 searchTerm.value = '';
-        //                               });
-        //                             },
-        //                             icon: const Icon(Icons.clear),
-        //                           );
-        //                         } else {
-        //                           return const SizedBox(width: 20);
-        //                         }
-        //                       }),
-
-        //                   // The validator receives the text that the user has entered.
-        //                 ),
-        //               ),
-        //             ),
-        //             const SizedBox(width: 10),
-        //             FilterButton(
-        //                 onPressed: () {
-        //                   setState(() {
-        //                     grid = !grid;
-        //                   });
-        //                 },
-        //                 icon: grid
-        //                     ? const Icon(Icons.view_list)
-        //                     : const Icon(Icons.grid_view)),
-        //             const SizedBox(width: 10),
-        //             FilterButton(
-        //                 onPressed: () => showFilterOptions(),
-        //                 // if no filters are selected make the icon filter off
-        //                 icon:
-        //                     selectedCountry == null && selectedLanguage == null
-        //                         ? const Icon(Icons.filter_alt_off)
-        //                         : const Icon(Icons.filter_alt)),
-        //           ],
-        //         ),
-        //       ),
-        //       const SizedBox(height: 20),
-        //     ],
-        //   ),
-        // ),
-
-        //This rebuilds every time the searchTerm value changes
-        ValueListenableBuilder(
-            valueListenable: searchTerm,
-            builder: (context, val, child) {
-              //this is in the case some combination of filters results in no stations displayed
-              if (channelsToDisplay.isEmpty) {
-                return SliverList(
-                    delegate: SliverChildListDelegate([
-                  const Center(
-                      child: Icon(Icons.sentiment_dissatisfied,
-                          size: 150, color: Colors.white))
-                ]));
-              } else {
-                //choose here between grid and list view
-                return grid
-                    ? gridView(channelsToDisplay)
-                    : listView(channelsToDisplay);
-              }
-            }),
-
-        //bottom buttons
-        SliverList(
-          delegate: SliverChildListDelegate(
-            [
-              // const SizedBox(
-              //   height: 40,
-              // ),
-              // lowerOptions(
-              //     context, Icons.info, 'Licenses', () => showLicenses(context)),
-              lowerDivider(),
-              lowerOptions(
-                  context,
-                  Icons.info,
-                  themeModel.currentTranslation.about,
-                  () => showAbout(context)),
-              const SizedBox(
-                height: 20,
-              )
-            ],
-          ),
-        ),
-      ],
+            ),
     );
   }
 }
