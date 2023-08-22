@@ -6,7 +6,7 @@ A streaming radio directory and tuner.
 
 
 
-### Done
+## Done
 - no actions on a channel renders correctly
 - larger screen interface adjustments
 - double check Android links not working on Pixel 7

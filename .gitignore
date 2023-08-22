@@ -1,3 +1,21 @@
+#Corey edit
+.fvm/flutter_sdk
+test
+pubspec.lock
+**/android/key.properties
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
 # Miscellaneous
 *.class
 *.log

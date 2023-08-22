@@ -9,10 +9,10 @@ import 'dart:convert';
 import 'dart:io';
 
 class ChannelAction {
-  final String address;
-  final String icon;
+  final String? address;
+  final String? icon;
 
-  ChannelAction({required this.address, required this.icon});
+  ChannelAction({this.address, this.icon});
 
   factory ChannelAction.fromJson(Map<String, dynamic> json) {
     return ChannelAction(
@@ -131,9 +131,10 @@ class Channels with ChangeNotifier {
         channelsJSON = await appDataChannels.readAsString();
       } catch (e) {
         try {
+          print('$e: problem using new file, rolling back to old one');
           channelsJSON = await appDataChannelsOld.readAsString();
         } catch (e) {
-          print('$e: problem using new file, rolling back to old one');
+          print('$e: problem using new file, rolling back to asset file');
           channelsJSON = await rootBundle.loadString("assets/channels.json");
         }
       }
@@ -163,7 +164,7 @@ class Channels with ChangeNotifier {
           final http.Response r = await http.head(Uri.parse(url));
           String? webFileTimeStamp = r.headers["last-modified"];
           String? oldTimeStamp = userPrefsBox.get("last-modified");
-          
+
           //if the webFileTimeStamp is null, something went wrong,
           //so watch for that.
           if (webFileTimeStamp != null) {
@@ -186,19 +187,33 @@ class Channels with ChangeNotifier {
     // Now use the file we've gotten - whether we've downloaded it anew or not
 
     await useLocalConfigFile();
+    // final utf8Decoder = utf8.decoder;
 
     //much trying and catching here but this is the one that does the most
     try {
-      channelsData = json.decode(channelsJSON);
+      //utf8.decode: json has accented characters so needs an extra unicode decoding, see:
+      // https://stackoverflow.com/questions/51368663/flutter-fetched-japanese-character-from-server-decoded-wrong
+      // List<int> codes = channelsJSON.codeUnits;
+      // channelsData = json.decode(const Utf8Decoder().convert(codes));
+
+      // var utf8version = utf8.decode(codes);
+      // channelsData = json.decode(utf8version);
+      // print(channelsData[0]);
+      channelsData = json.decode((channelsJSON)) as List<dynamic>;
     } catch (e) {
       try {
         channelsJSON = await appDataChannelsOld.readAsString();
-        channelsData = json.decode(channelsJSON);
+        // channelsData = json.decode(utf8.decode(channelsJSON.codeUnits));
+
+        channelsData = json.decode(utf8.decode(channelsJSON.codeUnits));
+//        // channelsData = json.decode((channelsJSON));
       } catch (e) {
         print('$e: getting info from assets 2');
         //if there's a problem just use the default from assets.
         channelsJSON = await rootBundle.loadString("assets/channels.json");
-        channelsData = json.decode(channelsJSON);
+
+        channelsData = json.decode(utf8.decode(channelsJSON.codeUnits));
+        // channelsData = json.decode((channelsJSON));
       }
     }
 

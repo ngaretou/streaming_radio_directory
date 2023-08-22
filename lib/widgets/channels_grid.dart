@@ -490,9 +490,6 @@ class _ChannelsGridState extends State<ChannelsGrid> {
           : RefreshIndicator(
               onRefresh: () async {
                 await channelsProvider.getData(force: true);
-                // Future.delayed(const Duration(seconds: 2));
-                print('updated');
-                setState(() {});
               },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -505,7 +502,10 @@ class _ChannelsGridState extends State<ChannelsGrid> {
                         children: [
                           // top row of control buttons
                           CircleButton(
-                              onPressed: () => Navigator.of(context).pop(),
+                              onPressed: () {
+                                HapticFeedback.mediumImpact();
+                                Navigator.of(context).pop();
+                              },
                               child: const Icon(Icons.close)),
                           const Expanded(
                               flex: 1,

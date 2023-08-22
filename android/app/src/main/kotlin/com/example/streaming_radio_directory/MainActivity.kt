@@ -1,4 +1,4 @@
-package com.example.streaming_radio_directory
+package org.sim.radio
 
 import io.flutter.embedding.android.FlutterActivity
 

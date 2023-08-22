@@ -206,6 +206,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       'messenger': FontAwesomeIcons.facebookMessenger,
       'twitter': FontAwesomeIcons.twitter,
       'whatsapp': FontAwesomeIcons.whatsapp,
+      'instagram': FontAwesomeIcons.instagram,
+      'youtube': FontAwesomeIcons.youtube,
     };
 
     //Action buttons - youtube, mail, etc
@@ -218,11 +220,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ),
         onPressed: () async {
           late String composedUrl;
-          bool isEmail = action.address.contains('@');
+          bool isEmail = action.address!.contains('@');
           if (isEmail) {
             composedUrl = 'mailto:${action.address}';
           } else {
-            composedUrl = action.address;
+            composedUrl = action.address!;
           }
 
           if (await canLaunchUrl(Uri.parse(composedUrl))) {
